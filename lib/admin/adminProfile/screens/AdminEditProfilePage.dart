@@ -7,7 +7,6 @@ import 'package:project/constants/AppColor_constants.dart';
 import 'package:project/constants/globalObjects.dart';
 import 'package:project/introduction/bloc/bloc_internet/internet_bloc.dart';
 import 'package:project/introduction/bloc/bloc_internet/internet_state.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Sqlite/admin_sqliteHelper.dart';
 import '../../../constants/AnimatedTextPopUp.dart';
 import '../../../No_internet/no_internet.dart';
@@ -19,8 +18,7 @@ class AdminEditProfilePage extends StatefulWidget {
   final VoidCallback onSave;
   final VoidCallback? onSaveSuccess; // Define the onSaveSuccess callback
 
-  AdminEditProfilePage({Key? key, required this.onSave, this.onSaveSuccess})
-      : super(key: key);
+  const AdminEditProfilePage({super.key, required this.onSave, this.onSaveSuccess});
 
   @override
   State<AdminEditProfilePage> createState() =>
@@ -33,8 +31,6 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
 
   _AdminEditProfilePageState(this.onSave);
   late AnimationController addToCartPopUpAnimationController;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController _usernameController =
       TextEditingController(text: GlobalObjects.adminusername);
@@ -89,19 +85,22 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
 
         Timer(const Duration(seconds: 3), () {
           addToCartPopUpAnimationController.reverse();
-          Navigator.pop(context);
-          Navigator.pop(context, true);
+          if (mounted) {
+            Navigator.pop(context);
+            Navigator.pop(context, true);
+          }
         });
         showPopupWithSuccessMessage("Profile updated successfully!");
         onSave();
 
-        // Set the boolean value to true
         widget.onSaveSuccess?.call();
       } else {
         addToCartPopUpAnimationController.forward();
         Timer(const Duration(seconds: 3), () {
           addToCartPopUpAnimationController.reverse();
-          Navigator.pop(context, false);
+          if (mounted) {
+            Navigator.pop(context, false);
+          }
         });
         showPopupWithFailedMessage("Failed to update profile!");
       }
@@ -137,9 +136,7 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
   Widget build(BuildContext context) {
     return BlocConsumer<InternetBloc, InternetStates>(
       listener: (context, state) {
-        // TODO: implement listener
         if (state is InternetLostState) {
-          // Set the flag to true when internet is lost
           isInternetLost = true;
           Future.delayed(const Duration(seconds: 2), () {
             Navigator.push(
@@ -151,9 +148,8 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
             );
           });
         } else if (state is InternetGainedState && isInternetLost) {
-          // Navigate back to the original page when internet is regained
           Navigator.pop(context);
-          isInternetLost = false; // Reset the flag
+          isInternetLost = false;
         }
       },
       builder: (context, state) {
@@ -200,20 +196,18 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
                                     : 30),
                             TextFormField(
                               controller: _usernameController,
-                              decoration:
-                                  const InputDecoration(labelText: 'Username'),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Username is required';
-                                }
-                                return null;
-                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Username',
+                                border: OutlineInputBorder(),
+                              ),
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: _passwordController,
                               obscureText: !_isPasswordVisible,
                               decoration: InputDecoration(
                                 labelText: 'Password',
+                                border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _isPasswordVisible
@@ -222,67 +216,42 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _isPasswordVisible = !_isPasswordVisible;
+                                      _isPasswordVisible =
+                                          !_isPasswordVisible;
                                     });
                                   },
                                 ),
                               ),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Password is required';
-                                }
-                                return null;
-                              },
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: _emailController,
-                              decoration:
-                                  const InputDecoration(labelText: 'Email'),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Email is required';
-                                }
-                                return null;
-                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                border: OutlineInputBorder(),
+                              ),
                             ),
+                            const SizedBox(height: 16),
                             TextFormField(
                               controller: _phoneNumberController,
                               decoration: const InputDecoration(
-                                  labelText: 'Phone Number'),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Phone Number is required';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(
-                                height: ResponsiveLayout.isSmallScreen(context)
-                                    ? 10
-                                    : 20),
-                            Container(
-                              margin: EdgeInsets.symmetric(horizontal: 50),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(50),
-                                color: AppColors.primaryColor,
-
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(),
                               ),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _submitForm,
-                                  style: ElevatedButton.styleFrom(
-                                    primary: AppColors.primaryColor, // Set the button background color
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50), // Set the border radius
-                                    ),
-                                  ),
-                                  child: Text('Submit',style: TextStyle(color: Colors.white,fontSize: 18),),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              onPressed: _submitForm,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(50),
                                 ),
                               ),
-                            )
-
-
+                              child: const Text('Submit',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18)),
+                            ),
                           ],
                         ),
                       ),
@@ -293,9 +262,7 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage>
             ),
           );
         } else {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );
